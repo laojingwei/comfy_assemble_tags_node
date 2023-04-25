@@ -3,8 +3,8 @@ import folder_paths
 import shutil
 cwd = os.getcwd()
 
-select_tags_path = cwd +'\\ComfyUI\\web\\extensions\\select_tags'
-select_tags_path_bk = cwd + '\\ComfyUI\\custom_nodes\\comfy_assemble_tags_node\\select_tags'
+select_tags_path = os.path.join(cwd, "ComfyUI", "web", "extensions", "select_tags")
+select_tags_path_bk = os.path.join(cwd, "ComfyUI", "custom_nodes", "comfy_assemble_tags_node", "select_tags")
 
 if not os.path.isdir(select_tags_path):
     print("----------start------第一次使用-------未发现select_tags文件夹，正在处理。。。")
