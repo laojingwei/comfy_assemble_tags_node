@@ -47,8 +47,8 @@ app.registerExtension({
 		if (nodeData.name === "Select Tags") {
 			const onNodeCreated = nodeType.prototype.onNodeCreated;
 			nodeType.prototype.onNodeCreated = function () {
-				// 要吐血了，为了这个数值，卡了我好久，平时测试很正常，一重启或导入工程就有问题；原来加载时new Date的时间是一模一样的，这里加了个随机数终于好了，干！
-				// To vomit blood, in order to this value, card I for a long time, usually test is very normal, a restart or import project there are problems; The new Date is exactly the same when we load it, and then we add a random number and there we go.
+				// 要吐血了，为了Date.now这个数值，卡了我好久，平时测试很正常，一重启或导入工程就有问题；原来加载时Date.now的时间是一模一样的，这里加了个随机数终于好了，干！
+				// I want to vomit blood, in order to Date.now the value, stuck me for a long time, usually the test is normal, once restart or import the project will have problems; The original loading Date.now time is exactly the same, here add a random number finally good, dry!
 				this.timeInMs = `${Date.now()}${Math.random()}`;
 				const r = onNodeCreated?.apply(this, arguments);
 				let _this = this;
@@ -57,7 +57,12 @@ app.registerExtension({
 				this.widgets[0].inputEl.readOnly = true;
 				this.widgets[0].inputEl.style.opacity = 0.6;
 				this.addWidget("button", "selecttags", "selecttags", () => {
+					let tcno = document.querySelectorAll("div.xww-tags-container");
+					for (let tag of tcno) {
+						tag.parentNode.removeChild(tag);
+					}
 					const container = document.createElement("div");
+					container.classList.add("xww-tags-container");
 					Object.assign(container.style, {
 						display: "grid",
 						gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr",
@@ -122,7 +127,7 @@ app.registerExtension({
 											_this.SEARChALLDATA[saaKey] = sVal;
 											sVal = "";
 										}
-										value = value.replace("**xww","").replace("##xww","");
+										value = value.replace("**xww","").replace("##xww","").replace("&&xww","");
 										if(sKey) {
 											saaKey = `${sheetNames[i]}->${value}`;
 										} else {
@@ -154,7 +159,7 @@ app.registerExtension({
 								event.target.style.color = "blue";
 								event.target.style.background = "#99CCFF";
 							}
-							showSelectTags(sheets,i+''+_this.timeInMs);
+							showSelectTags(sheets,i+''+_this.timeInMs,sheetNames[i]);
 						};
 						container.append(tags);
 					}
@@ -174,7 +179,7 @@ app.registerExtension({
 						return sortedSheets
 					}
 
-					function showSelectTags(sheets,position) {
+					function showSelectTags(sheets,position,shelctPath) {
 						let showtags = document.querySelectorAll("button.xww-selecttags-tags-show-tags-button-t, button.xww-selecttags-tags-show-tags-button, div.xww-selecttags-tags-show-tags-input");
 						for (let tag of showtags) {
 							tag.parentNode.removeChild(tag);
@@ -195,7 +200,6 @@ app.registerExtension({
 										if (firstBtnId == '') {
 											firstBtnId = id;
 										}
-
 										selectTagsData[id] = [];
 										keyStr = id;
 										const button = document.createElement("button");
@@ -235,7 +239,7 @@ app.registerExtension({
 													len++;
 												}
 											}
-											showKeyTags(selectTagsData[event.target.id],event.target.id,event.target.innerText,len);
+											showKeyTags(selectTagsData[event.target.id],event.target.id,event.target.innerText,len,`${shelctPath}->${v}`);
 										};
 										container.before(button);
 										container.append(button);
@@ -275,7 +279,7 @@ app.registerExtension({
 													len++;
 												}
 											}
-											showKeyTags(selectTagsData[event.target.id],event.target.id,event.target.innerText,len);
+											showKeyTags(selectTagsData[event.target.id],event.target.id,event.target.innerText,len,`${shelctPath}->${v}`);
 										};
 										container.before(button);
 										container.append(button);
@@ -293,7 +297,7 @@ app.registerExtension({
 						}
 					}
 					
-					function showKeyTags(std,id,innerText,len) {
+					function showKeyTags(std,id,innerText,len,shelctPath) {
 						_this.searchData = {};
 						_this.showingID = id;
 						var  length_ = 0;
@@ -346,7 +350,7 @@ app.registerExtension({
 
 								
 								if (std && std.length>0){
-									let v = value.replace("##xww","").replace("**xww");
+									let v = value.replace("##xww","").replace("**xww","").replace("&&xww","");
 									_this.searchData[v] = iptl;
 								}
 								
@@ -394,7 +398,7 @@ app.registerExtension({
 										
 									});
 									button_.textContent = "✄";
-									button.textContent = value.replace("##xww","");
+									button.textContent = value.replace("##xww","").replace("&&xww","");
 									let space = length_%10;
 									if (space > 1) {
 										for (let i = 0; i < 10 - space; i++) {
@@ -443,6 +447,9 @@ app.registerExtension({
 											this.style.color = "white";
 											this.value = 0;
 										}
+										if (std[key].indexOf("&&xww") !== -1) {
+											return;
+										}
 										select_tags(event,'ipt',this.value);
 									}});
 									
@@ -483,13 +490,16 @@ app.registerExtension({
 										background: "#4b4c4b",
 										
 									});
-									button.textContent = value;
-									iptlabel.textContent = "←☜";
-									document.head.appendChild(style);
 									
 									button.onclick = (event) => {
-										select_tags(event);
+										if (std[key].indexOf("&&xww") !== -1) {
+											return;
+										}
+										select_tags(event,'','',shelctPath);
 									};
+									button.textContent = value.replace("&&xww","");
+									iptlabel.textContent = "←☜";
+									document.head.appendChild(style);
 									iptdiv.append(iptlabel);
 									iptdiv.append(input);
 									container.before(button);
@@ -514,7 +524,15 @@ app.registerExtension({
 						}
 					}
 
-					function select_tags(event,sign,inputvalue) {
+					function select_tags(event,sign,inputvalue,shelctPath) {
+						let text = event.target.textContent;
+						if (text && text.indexOf("tags.xlsx") === 0) {
+							alert("你的项目地址（Your project address）/ComfyUI_windows_portable/ComfyUI/web/extensions/select_tags/tags.xlsx");
+							return;
+						}
+						if (text && text.indexOf("&&xww") !== -1 ) {
+							return;
+						}
 						let rep = String(_this.timeInMs);
 						let regex = new RegExp(rep, 'g');
 						let id = event.target.id;
@@ -531,11 +549,11 @@ app.registerExtension({
 							let index = event.target.id.lastIndexOf('-btn-');
 							let iptId = id.substring(0, index) + '-ipt-' + id.substring(index + '-btn-'.length);
 							let iptV = document.getElementById(iptId)?.value;
-							let text = event.target.textContent;
 							// let regext = /[\u4e00-\u9fa5/]/g;
 							// text = text.replace (regext, "")
 							text = text.split("--")[0];
-							_this.SELECTDATA[btId] = {textContent:text,input:iptV}
+							let ellipsis = text.length > 50 ? "..." : "";
+							_this.SELECTDATA[btId] = {textContent:text,input:iptV,path:`${shelctPath}->${text.slice (0, 50)}${ellipsis}`};
 							event.target.style.color = "green";
 							event.target.style.background = "#CCFF99";
 						} else {
@@ -547,11 +565,12 @@ app.registerExtension({
 				}
 
 				const dialog = new app.ui.dialog.constructor();
-				dialog.element.classList.add("comfy-settings");
+				dialog.element.classList.add("xww-tags-settings");
 				
 				const ok = dialog.element.querySelector("button");
 				const close = document.createElement("button");
 				const search = document.createElement("input");
+				const selectedDiv = document.createElement("div");
 				const searchPath = document.createElement("label");
 				const clear = document.createElement("button");
 				searchPath.textContent = "";
@@ -567,24 +586,45 @@ app.registerExtension({
 				Object.assign(clear.style, {
 					color: "#FF0000",
 				});
-				searchPath.setAttribute("disabled", "");
-				Object.assign(searchPath, {id:"searchPath-label"+_this.timeInMs});
+
+				Object.assign(selectedDiv.style, {
+					padding: "10px",
+					marginBottom: "10px",
+					overflow: "auto",
+					border: "1px solid #e0e0e0",
+					borderRadius: "8px",
+					display: "none",
+					maxHeight: "100px",
+					minHeight: "30px",
+				});
+				let searchDiv = selectedDiv.cloneNode();
+				Object.assign(selectedDiv, {id:"selectedDiv-div"+_this.timeInMs});
+				Object.assign(searchDiv, {id:"searchPath-div"+_this.timeInMs});
+
 				Object.assign(searchPath.style, {
 					paddingLeft: "10px",
 					fontSize: "12px",
 					color: "#FFFFFF",
-					maxHeight: "80px",
-					zIndex: "99",
-					width: "35%",
 					opacity: "0.9",
 					wordWrap: "break-word",
 					wordBreak: "break-all",
 					textAlign: "left",
-					display: "grid",
 					alignItems:"center",
 				});
+
+				let selectedLabel = searchPath.cloneNode();
+				Object.assign(selectedLabel.style, {
+					color: "#a6a9c9",
+				});
+				Object.assign(selectedLabel, {id:"selected-label"+_this.timeInMs});
+				Object.assign(searchPath, {id:"searchPath-label"+_this.timeInMs});
+
+				selectedDiv.append(selectedLabel);
+				searchDiv.append(searchPath);
+
 				Object.assign(search, {id:"search-input"+_this.timeInMs});
 				Object.assign(search.style, {
+					color: "#DDDDDD",
 					margin: "10px",
 					padding: "10px",
 					fontSize: "15px",
@@ -593,7 +633,7 @@ app.registerExtension({
 					display: "grid",
 					alignItems:"center",
 				});
-				Object.assign(search, {type: "text", placeholder:"search搜索", autocomplete:"off",value:"", onkeyup: function(event) {
+				Object.assign(search, {type: "text", placeholder:"search搜索： ** in front of search global, do not add, only search open tabs", autocomplete:"off",value:"", onkeyup: function(event) {
 					if (this.value && this.value.length > 0) {
 						let patt = /^[\s]*$/;
 						let pvalue = patt.test(this.value);
@@ -613,15 +653,18 @@ app.registerExtension({
 						}
 					}
 					let spl = document.getElementById("searchPath-label"+_this.timeInMs);
-					if (spl) {
-						if (sa) {
-							spl.style.display = "grid";
-							spl.innerText = sa;
-						} else {
-							spl.style.display = "none";
-							spl.innerText = "";
-						}
+					let spd = document.getElementById("searchPath-div"+_this.timeInMs);
+					let si = document.getElementById("search-input"+_this.timeInMs);
+					if (sa) {
+						spd && (spd.style.display = "grid");
+						spl && (spl.innerText = sa);
+						si && (si.style.color = "green");
+					} else {
+						spd && (spd.style.display = "none");
+						spl && (spl.innerText = "");
+						si && (si.style.color = "#DDDDDD");
 					}
+					let isIn = false;
 					if (_this.searchData) {
 						let tval = this.value.toLowerCase().replace("**","");
 						for (let key in _this.searchData) {
@@ -630,16 +673,25 @@ app.registerExtension({
 								if (sid) {
 									sid.style.display = "grid";
 									sid.style.animation = "label-animation 1s infinite";
+									isIn = true;
 								}
 							} else {
 								let sid = document.getElementById(_this.searchData[key]);
 								if (sid) {
+									// 为了避免不必要的gpu消耗，在隐藏时删除动画
 									// To avoid unnecessary gpu consumption, remove animation when hiding
 									sid.style.display = "none"; 
 									sid.style.animation = "none";
 								}
 							}
 						}
+						if (isIn) {
+							si && (si.style.color = "green");
+						} else {
+							si && (si.style.color = "#DDDDDD");
+						}
+					} else {
+						si && (si.style.color = "#DDDDDD");
 					}
 				}});
 				ok.onclick = function () {
@@ -658,14 +710,11 @@ app.registerExtension({
 					}
 					tagsText = stdata?.join();
 					_this.widgets[0].value = tagsText;
-					let searchi = document.getElementById('search-input'+_this.timeInMs);
-					searchi && (searchi.value = "");
-					dialog.close();
+					showSelectDiv();
+					closeTags();
 				};
 				close.onclick = function () {
-					let searchi = document.getElementById('search-input'+_this.timeInMs);
-					searchi && (searchi.value = "");
-					dialog.close();
+					closeTags();
 				};
 				clear.onclick = function () {
 					let cfm = confirm("确定清除所有选择及修改的内容吗？\nAre you sure to clear all selections and modifications?");
@@ -678,10 +727,45 @@ app.registerExtension({
 						}
 					}
 				};
-				ok.before(searchPath);
+				ok.before(selectedDiv);
+				ok.before(searchDiv);
 				ok.before(search);
 				ok.after(close);
 				ok.after(clear);
+
+				function closeTags() {
+					let searchi = document.getElementById('search-input'+_this.timeInMs);
+					searchi && (searchi.value = "");
+					let spl = document.getElementById("searchPath-label"+_this.timeInMs);
+					spl && (spl.innerText = "");
+					let spd = document.getElementById("searchPath-div"+_this.timeInMs);
+					spd && (spd.style.display = "none");
+					let si = document.getElementById("search-input"+_this.timeInMs);
+					si && (si.style.color = "#DDDDDD");
+					dialog.close();
+				}
+
+				function showSelectDiv() {
+					if ( _this.SELECTDATA){
+						let regex = new RegExp(' ', 'g');
+						let sd = "";
+						for (let k in _this.SELECTDATA) {
+							if (_this.SELECTDATA.hasOwnProperty(k)) {
+								let path = _this.SELECTDATA[k].path;
+								sd = `${sd}${path}\n`;
+							}
+						}
+						let sdd = document.getElementById("selectedDiv-div"+_this.timeInMs);
+						let sdl = document.getElementById("selected-label"+_this.timeInMs);
+						if (sd) {
+							sdd && (sdd.style.display = "grid");
+							sdl && (sdl.innerText = sd);
+						} else {
+							sdd && (sdd.style.display = "none");
+							sdl && (sdl.innerText = "");
+						}
+					}
+				}
 				return r;
 			};
 		}
