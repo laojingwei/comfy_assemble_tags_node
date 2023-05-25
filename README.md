@@ -1,5 +1,6 @@
 # comfy_assemble_tags_node
-
+2023 04-26问题修复说明：
+我十分抱歉，昨天我打包时把搜索路径反显和已选路径反显的代码给覆盖掉了，今天才发现，我已经重新上传了代码到github和civitail，如果你之前有下载过，想使用这个路径反显的功能，请先到下载最新代码覆盖这个文件ComfyUI\custom_nodes\comfy_assemble_tags_node，然后去ComfyUI\web\extensions\select_tags删除这个select_tags文件夹，注意，如果你有在这个文件夹的tags.xlsx里修改或增加你的内容，请先备份，最后重启ComfyUI
 # 描述
 ### comfy_assemble_tags_node是一个关键词选择及拼装修改插件，可以帮助你快速生成各种ai用关键词。
 ## 它有以下特点：
