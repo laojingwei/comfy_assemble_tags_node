@@ -73,7 +73,7 @@ app.registerExtension({
 					if (!XLSXDATA || Object.keys(XLSXDATA).length < 1) {
 						// 我不想每次都请求这个，但是为了正确地获得这个文件的最新内容，我必须禁用浏览器缓存，要不然去修改了这个表后由于浏览器缓存，无法刷新最新数据出来
 						// I don't want to request this every time, but in order to get the latest contents of this file correctly I have to disable the browser cache
-						fetch('http://127.0.0.1:8188/extensions/select_tags/tags.xlsx', {
+						fetch('/extensions/select_tags/tags.xlsx', {
 							cache: 'reload'
 						  })
 						.then(response => response.arrayBuffer())
