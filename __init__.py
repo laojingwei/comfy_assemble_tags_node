@@ -121,7 +121,7 @@ class SHOWTAGS:
     CATEGORY = "xww/tags"
 
     def show_tags(self, text):   
-        return {"ui": { "text": text }, "result": (text,)}
+        return {"ui": { "text": [text] }, "result": (text,)}
     
 
 class SHOWSEED:
@@ -144,7 +144,7 @@ class SHOWSEED:
         if prompt is not None:
             seeds = [v.get('inputs').get('seed') for v in prompt.values() if v.get('inputs').get('seed')]
             text = ",".join(map(str, seeds))
-        return {"ui": { "seed": text }, "result": (text,)}
+        return {"ui": { "seed": [text] }, "result": (text,)}
 
 NODE_CLASS_MAPPINGS = {
     "Assemble Tags": ASSEMBLETAGS,
